@@ -38,6 +38,17 @@ set(CMAKE_C_FLAGS "-Os -w -std=gnu11 -ffunction-sections -fdata-sections -MMD -m
 set(CMAKE_CXX_FLAGS "-Os -w -std=gnu++11 -fpermissive -fno-exceptions -ffunction-sections -fdata-sections -fno-threadsafe-statics -MMD -mmcu=${MCU} -DF_CPU=${F_CPU} -DARDUINO=${ARDUINO_VERSION}" CACHE STRING "")
 set(CMAKE_EXE_LINKER_FLAGS "-w -Os -Wl,--gc-sections,--relax -lm -mmcu=${MCU}" CACHE STRING "")
 
+MACRO(SUBDIRLIST result curdir)
+  FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
+  SET(dirlist "")
+  FOREACH(child ${children})
+    IF(IS_DIRECTORY ${curdir}/${child})
+      LIST(APPEND dirlist ${child})
+    ENDIF()
+  ENDFOREACH()
+  SET(${result} ${dirlist})
+ENDMACRO()
+
 
 
 #====================================================================#
@@ -46,7 +57,7 @@ set(CMAKE_EXE_LINKER_FLAGS "-w -Os -Wl,--gc-sections,--relax -lm -mmcu=${MCU}" C
 project(Marlin C CXX)
 
 
-file(GLOB SOURCES "${MARLIN_SRC_PATH}/*.c*")
+file(GLOB_RECURSE SOURCES "${MARLIN_SRC_PATH}/*.c*")
 
 #list(APPEND HARDWARE_LIBS SPI)
 #list(APPEND HARDWARE_LIBS Wire)
@@ -65,20 +76,56 @@ add_library(CORE ${CORE_SRC})
 
 #set(DEBUG_LIBS ${HARDWARE_LIBS} CACHE STRING "ForDebug")
 # Hardware Libs
-foreach(LIB IN LISTS HARDWARE_LIBS)
+SUBDIRLIST(HARDWARE_LIBS "${ARDUINO_SDK_PATH}/hardware/arduino/avr/libraries/")
 
-        file(GLOB_RECURSE ${LIB}_SRC "${ARDUINO_SDK_PATH}/hardware/arduino/avr/libraries/${LIB}/src/*.c*")
+foreach(LIB IN LISTS HARDWARE_LIBS)
+		
+        file(GLOB_RECURSE ${LIB}_HDR "${ARDUINO_SDK_PATH}/hardware/arduino/avr/libraries/${LIB}/*.h*")
+       
+        foreach(SRCF ${${LIB}_HDR})
+                get_filename_component(INCDIR ${SRCF} DIRECTORY)
+                include_directories(${INCDIR})
+                
+        endforeach()
+
+
+        file(GLOB_RECURSE ${LIB}_SRC "${ARDUINO_SDK_PATH}/hardware/arduino/avr/libraries/${LIB}/*.c*")
+        
+        foreach(SRCF ${${LIB}_SRC})
+			get_filename_component(INCDIR ${SRCF} DIRECTORY)
+			include_directories(${INCDIR})
+			
+		endforeach()
+	
         add_library(${LIB} ${${LIB}_SRC})
 
 endforeach()
 
-
 # Libraries
+
+SUBDIRLIST(LIBS "${ARDUINO_SDK_PATH}/libraries/")
+
+
 foreach(LIB IN LISTS LIBS)
-        include_directories(${ARDUINO_SDK_PATH}/libraries/${LIB})
+        message(STATUS ${LIB})
+        file(GLOB_RECURSE ${LIB}_SRC "${ARDUINO_SDK_PATH}/libraries/${LIB}/*.c*")
         
-        file(GLOB_RECURSE ${LIB}_SRC "${ARDUINO_SDK_PATH}/libraries/${LIB}/utility/*.c*")
+		foreach(SRCF ${${LIB}_SRC})
+                get_filename_component(INCDIR ${SRCF} DIRECTORY)
+                include_directories(${INCDIR})
+                
+           
+        endforeach()
         
+        file(GLOB_RECURSE ${LIB}_HDR "${ARDUINO_SDK_PATH}/libraries/${LIB}/*.h*")
+     
+		foreach(SRCF ${${LIB}_HDR})
+			get_filename_component(INCDIR ${SRCF} DIRECTORY)
+			include_directories(${INCDIR})
+	
+		endforeach()
+
+
         add_library(${LIB} ${${LIB}_SRC})
 
 endforeach()
@@ -96,7 +143,7 @@ add_executable(${TARGET_NAME} ${SOURCES})
 set_target_properties(${TARGET_NAME} PROPERTIES SUFFIX ".elf")
 
                 
-target_link_libraries(${TARGET_NAME} CORE ${HARDWARE_LIBS} ${LIBS} "-lm")
+target_link_libraries(${TARGET_NAME} CORE ${LIBS} ${HARDWARE_LIBS} "-lm")
 
 
 set(ARDUINO_OBJCOPY_EEP_FLAGS -O ihex -j .eeprom --set-section-flags=.eeprom=alloc,load --no-change-warnings --change-section-lma .eeprom=0 CACHE STRING "")
