@@ -23,8 +23,8 @@ class MarlinFlasherPlugin(octoprint.plugin.BlueprintPlugin,
     def __init__(self):
         self.templates = ('Configuration.h', 'Configuration_adv.h', 'pins_RUMBA.h')
         self.depList = ['avr-libc', 'avrdude', 'make', 'cmake']
-        #self.hardwareLibs = ['SPI', 'Wire']
-        #self.libs = ['U8glib']
+        self.hardwareLibs = ['SPI', 'Wire']
+        self.libs = ['U8glib']
         self.depInstalled = False
         
     def on_startup(self, host, port):
@@ -96,7 +96,7 @@ class MarlinFlasherPlugin(octoprint.plugin.BlueprintPlugin,
 #         self._sendStatus(line=' '.join(cmakecmd), stream='message') 
         
         self.execute(['cmake', libPath, '-DBOARD_VARIANT=mega', '-DMCU=atmega2560', '-DF_CPU=16000000L', '-DUPLOAD_PORT=' + selectedPort,
-                      '-DMARLIN_SRC_PATH=' + marlinFolder, '-DARDUINO_SDK_PATH=' + arduinoLibPath ], cwd=buildFolder)
+                      '-DMARLIN_SRC_PATH=' + marlinFolder, '-DARDUINO_SDK_PATH=' + arduinoLibPath, '-DHARDWARE_LIBS=' + ';'.join(self.hardwareLibs), '-DLIBS=' + ';'.join(self.libs) ], cwd=buildFolder)
         
         self.execute(['make', '-j4'], cwd=buildFolder)
         
