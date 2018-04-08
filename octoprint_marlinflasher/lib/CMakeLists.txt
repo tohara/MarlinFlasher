@@ -83,7 +83,7 @@ foreach(LIB IN LISTS HARDWARE_LIBS)
         file(GLOB_RECURSE ${LIB}_HDR "${ARDUINO_SDK_PATH}/hardware/arduino/avr/libraries/${LIB}/*.h*")
        
         foreach(SRCF ${${LIB}_HDR})
-                get_filename_component(INCDIR ${SRCF} DIRECTORY)
+                get_filename_component(INCDIR ${SRCF} PATH)
                 include_directories(${INCDIR})
                 
         endforeach()
@@ -92,7 +92,7 @@ foreach(LIB IN LISTS HARDWARE_LIBS)
         file(GLOB_RECURSE ${LIB}_SRC "${ARDUINO_SDK_PATH}/hardware/arduino/avr/libraries/${LIB}/*.c*")
         
         foreach(SRCF ${${LIB}_SRC})
-			get_filename_component(INCDIR ${SRCF} DIRECTORY)
+			get_filename_component(INCDIR ${SRCF} PATH)
 			include_directories(${INCDIR})
 			
 		endforeach()
@@ -111,7 +111,7 @@ foreach(LIB IN LISTS LIBS)
         file(GLOB_RECURSE ${LIB}_SRC "${ARDUINO_SDK_PATH}/libraries/${LIB}/*.c*")
         
 		foreach(SRCF ${${LIB}_SRC})
-                get_filename_component(INCDIR ${SRCF} DIRECTORY)
+                get_filename_component(INCDIR ${SRCF} PATH)
                 include_directories(${INCDIR})
                 
            
@@ -120,7 +120,7 @@ foreach(LIB IN LISTS LIBS)
         file(GLOB_RECURSE ${LIB}_HDR "${ARDUINO_SDK_PATH}/libraries/${LIB}/*.h*")
      
 		foreach(SRCF ${${LIB}_HDR})
-			get_filename_component(INCDIR ${SRCF} DIRECTORY)
+			get_filename_component(INCDIR ${SRCF} PATH)
 			include_directories(${INCDIR})
 	
 		endforeach()
